@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
 """Two-Sentence Horror entry for the make.fun competition
-u-suroto-two-sentence-horror-acea9253.
+u-suroto-two-sentence-horror-acea9253 (round 2).
 
 Prints the story and writes it to the entry output path
 ($ENTRY_OUTPUT, else /output/entry.txt).
 
 Gate (per the kit's RULES.txt): the file must be UTF-8 text of 1 to
 400 characters, not only white space. The story itself is exactly
-two sentences, and the second sentence turns the first: the hearing
-aid cannot invent sound, so the dead husband's humming is real.
+two sentences.
+
+Story (winner of a 5-angle head-to-head; see the build session):
+a lost-property clerk logs the same unclaimed item every week --
+one right shoe, size nine, forty-seven of them -- and the man who
+finally claims them all leaves one behind on the counter: mine.
+New claim: a lost-property log of identical single shoes.
+Concrete noun: forty-seven right shoes, size nine.
+Twist: the shoe left behind is the narrator's own.
 """
 
 import os
 import re
 import sys
+import unicodedata
 
 STORY = (
-    "Since my hearing aid was fitted, I can hear my dead husband "
-    "humming in the kitchen every evening. "
-    "The audiologist says the device only amplifies sound \u2014 "
-    "it cannot invent it."
+    "At the lost-property office I log the same unclaimed item every week: "
+    "a single shoe, always for the right foot, always size nine. "
+    "This morning a man claimed all forty-seven of them, then left a "
+    "right shoe, size nine, on the counter \u2014 mine."
 )
 
 OUTPUT_PATH = os.environ.get("ENTRY_OUTPUT", "/output/entry.txt")
@@ -37,6 +45,19 @@ def validate(text):
     assert 1 <= len(text) <= 400, f"entry length {len(text)} outside 1..400"
     assert sentence_count(text) == 2, (
         f"entry has {sentence_count(text)} sentences, expected 2"
+    )
+    assert "\n" not in text and "\r" not in text, "entry contains a newline"
+    assert "  " not in text, "entry contains a double space"
+    for ch in text:
+        assert not unicodedata.category(ch).startswith("C"), (
+            f"entry contains a control/format character: U+{ord(ch):04X}"
+        )
+    # Twist guard: the second sentence must land on the payoff word --
+    # the shoe left behind is the narrator's own. If the story is ever
+    # reworded and this fails, the twist has been edited out.
+    assert text.endswith("\u2014 mine."), "entry must end on the twist payoff"
+    assert "forty-seven" in text and "size nine" in text, (
+        "entry lost its concrete detail (forty-seven right shoes, size nine)"
     )
     return True
 
